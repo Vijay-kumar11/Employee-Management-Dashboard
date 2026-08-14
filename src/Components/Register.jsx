@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/login.css";
 
+const API_URL = import.meta.env.VITE_API_URL;
+
 function Register() {
   const navigate = useNavigate();
 
@@ -21,40 +23,82 @@ function Register() {
     setError("");
     setSuccess("");
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    if (!API_URL) {
+      setError(
+        "API URL is not configured. Please check your frontend .env file."
+      );
       return;
     }
 
-    setLoading(true);
+    if (!name.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    if (!email.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+
+    if (!password) {
+      setError("Please enter a password.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError(
+        "Password must contain at least 6 characters."
+      );
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
 
     try {
+      setLoading(true);
+
       const response = await fetch(
-        "http://localhost:5000/api/register",
+        `${API_URL}/register`,
         {
           method: "POST",
+
           headers: {
             "Content-Type": "application/json",
           },
+
           body: JSON.stringify({
-            name,
-            email,
+            name: name.trim(),
+            email: email.trim(),
             password,
           }),
         }
       );
 
-      const data = await response.json();
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
 
       if (!response.ok) {
         throw new Error(
-          data.message || "Registration failed"
+          data.message || "Registration failed."
         );
       }
 
       setSuccess(
         "Account created successfully! Redirecting to login..."
       );
+
+      setName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
 
       setTimeout(() => {
         navigate("/login");
@@ -68,7 +112,7 @@ function Register() {
 
       setError(
         error.message ||
-          "Unable to connect to the server"
+          "Unable to connect to the server."
       );
     } finally {
       setLoading(false);
@@ -81,18 +125,24 @@ function Register() {
       <div className="login-container">
 
         <div className="login-header">
-          <h1>Employee Management</h1>
+
+          <h1>
+            Employee Management
+          </h1>
 
           <p>
             Create your account
           </p>
+
         </div>
 
         <div className="login-card">
 
           <div className="login-card-header">
 
-            <h2>Create Account</h2>
+            <h2>
+              Create Account
+            </h2>
 
             <p>
               Register to access the dashboard
@@ -114,6 +164,8 @@ function Register() {
               </div>
             )}
 
+            {/* NAME */}
+
             <div className="form-group">
 
               <label htmlFor="name">
@@ -132,6 +184,8 @@ function Register() {
               />
 
             </div>
+
+            {/* EMAIL */}
 
             <div className="form-group">
 
@@ -152,6 +206,8 @@ function Register() {
 
             </div>
 
+            {/* PASSWORD */}
+
             <div className="form-group">
 
               <label htmlFor="password">
@@ -171,6 +227,8 @@ function Register() {
               />
 
             </div>
+
+            {/* CONFIRM PASSWORD */}
 
             <div className="form-group">
 
@@ -193,6 +251,8 @@ function Register() {
               />
 
             </div>
+
+            {/* BUTTON */}
 
             <button
               type="submit"

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "../Styles/login.css";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = import.meta.env.VITE_API_URL;
 
 function Login() {
   const navigate = useNavigate();
@@ -34,14 +34,21 @@ function Login() {
     clearMessages();
   };
 
-  // ================================
+  // =====================================
   // LOGIN
-  // ================================
+  // =====================================
 
   const handleLogin = async (event) => {
     event.preventDefault();
 
     clearMessages();
+
+    if (!API_URL) {
+      setError(
+        "API URL is not configured. Please check your frontend .env file."
+      );
+      return;
+    }
 
     if (!email.trim() || !password) {
       setError("Please enter your email and password.");
@@ -53,16 +60,24 @@ function Login() {
 
       const response = await fetch(`${API_URL}/login`, {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           email: email.trim(),
           password,
         }),
       });
 
-      const data = await response.json();
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
 
       if (!response.ok) {
         throw new Error(
@@ -70,11 +85,13 @@ function Login() {
         );
       }
 
-      // Save user information
-      localStorage.setItem(
-        "user",
-        JSON.stringify(data.user)
-      );
+      // Save user
+      if (data.user) {
+        localStorage.setItem(
+          "user",
+          JSON.stringify(data.user)
+        );
+      }
 
       // Save JWT token
       if (data.token) {
@@ -98,14 +115,21 @@ function Login() {
     }
   };
 
-  // ================================
+  // =====================================
   // REGISTER
-  // ================================
+  // =====================================
 
   const handleRegister = async (event) => {
     event.preventDefault();
 
     clearMessages();
+
+    if (!API_URL) {
+      setError(
+        "API URL is not configured. Please check your frontend .env file."
+      );
+      return;
+    }
 
     if (!name.trim()) {
       setError("Please enter your full name.");
@@ -134,9 +158,11 @@ function Login() {
 
       const response = await fetch(`${API_URL}/register`, {
         method: "POST",
+
         headers: {
           "Content-Type": "application/json",
         },
+
         body: JSON.stringify({
           name: name.trim(),
           email: email.trim(),
@@ -144,7 +170,13 @@ function Login() {
         }),
       });
 
-      const data = await response.json();
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
 
       if (!response.ok) {
         throw new Error(
@@ -157,6 +189,7 @@ function Login() {
       );
 
       setName("");
+      setEmail("");
       setPassword("");
 
       setTimeout(() => {
@@ -179,6 +212,7 @@ function Login() {
     <div className="login-page">
 
       {/* LEFT BRAND SECTION */}
+
       <div className="login-brand-section">
 
         <div className="brand-content">
@@ -206,6 +240,7 @@ function Login() {
 
               <div>
                 <strong>Easy Management</strong>
+
                 <small>
                   Manage employee information easily.
                 </small>
@@ -217,6 +252,7 @@ function Login() {
 
               <div>
                 <strong>Secure Access</strong>
+
                 <small>
                   JWT-based authentication.
                 </small>
@@ -228,6 +264,7 @@ function Login() {
 
               <div>
                 <strong>Role Based Access</strong>
+
                 <small>
                   Administrator and User permissions.
                 </small>
@@ -235,15 +272,19 @@ function Login() {
             </div>
 
           </div>
+
         </div>
+
       </div>
 
       {/* RIGHT FORM SECTION */}
+
       <div className="login-form-section">
 
         <div className="login-card">
 
           {/* HEADER */}
+
           <div className="login-header">
 
             <span className="login-eyebrow">
@@ -267,22 +308,27 @@ function Login() {
           </div>
 
           {/* ERROR MESSAGE */}
+
           {error && (
             <div className="login-message error-message">
               <span>!</span>
+
               <p>{error}</p>
             </div>
           )}
 
           {/* SUCCESS MESSAGE */}
+
           {success && (
             <div className="login-message success-message">
               <span>✓</span>
+
               <p>{success}</p>
             </div>
           )}
 
           {/* FORM */}
+
           <form
             onSubmit={
               isRegister
@@ -292,6 +338,7 @@ function Login() {
           >
 
             {/* NAME */}
+
             {isRegister && (
               <div className="login-form-group">
 
@@ -317,10 +364,12 @@ function Login() {
                   />
 
                 </div>
+
               </div>
             )}
 
             {/* EMAIL */}
+
             <div className="login-form-group">
 
               <label htmlFor="email">
@@ -345,9 +394,11 @@ function Login() {
                 />
 
               </div>
+
             </div>
 
             {/* PASSWORD */}
+
             <div className="login-form-group">
 
               <div className="password-label-row">
@@ -412,6 +463,7 @@ function Login() {
             </div>
 
             {/* SUBMIT BUTTON */}
+
             <button
               type="submit"
               className="login-submit-button"
@@ -443,6 +495,7 @@ function Login() {
           </form>
 
           {/* SWITCH LOGIN / REGISTER */}
+
           <div className="login-switch">
 
             <span>
@@ -463,6 +516,7 @@ function Login() {
           </div>
 
           {/* FOOTER */}
+
           <div className="login-footer">
 
             <span>
@@ -478,6 +532,7 @@ function Login() {
           </div>
 
         </div>
+
       </div>
 
     </div>

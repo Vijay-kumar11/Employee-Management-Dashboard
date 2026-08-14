@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import "../Styles/dashboard.css";
 
-const API_URL = "http://localhost:5000/api/employees";
+const API_URL = import.meta.env.VITE_API_URL;
 
 const EMPTY_EMPLOYEE = {
   name: "",
@@ -21,17 +21,23 @@ function Dashboard() {
   const [saving, setSaving] = useState(false);
 
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] =
+    useState("");
 
-  const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] =
+    useState(false);
+
   const [editingEmployee, setEditingEmployee] =
     useState(null);
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] =
+    useState("");
+
   const [departmentFilter, setDepartmentFilter] =
     useState("");
 
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] =
+    useState(1);
 
   const [loggedInUser, setLoggedInUser] =
     useState(null);
@@ -42,7 +48,7 @@ function Dashboard() {
   const employeesPerPage = 5;
 
   // =====================================
-  // GET TOKEN
+  // TOKEN
   // =====================================
 
   const getToken = () => {
@@ -50,7 +56,7 @@ function Dashboard() {
   };
 
   // =====================================
-  // AUTHENTICATED REQUEST
+  // AUTHENTICATED FETCH
   // =====================================
 
   const authenticatedFetch = async (
@@ -58,6 +64,12 @@ function Dashboard() {
     options = {}
   ) => {
     const token = getToken();
+
+    if (!API_URL) {
+      throw new Error(
+        "API URL is not configured. Please check your frontend .env file."
+      );
+    }
 
     if (!token) {
       localStorage.removeItem("user");
@@ -75,10 +87,7 @@ function Dashboard() {
       headers,
     });
 
-    // JWT expired / invalid
-    if (
-      response.status === 401
-    ) {
+    if (response.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
 
@@ -99,12 +108,16 @@ function Dashboard() {
       const storedUser =
         localStorage.getItem("user");
 
-      if (storedUser) {
+      const token = localStorage.getItem("token");
+
+      if (storedUser && token) {
         setLoggedInUser(
           JSON.parse(storedUser)
         );
       } else {
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
+
         window.location.href = "/login";
       }
     } catch (err) {
@@ -125,8 +138,7 @@ function Dashboard() {
   // =====================================
 
   const isAdmin =
-    loggedInUser?.role ===
-    "Administrator";
+    loggedInUser?.role === "Administrator";
 
   // =====================================
   // FETCH EMPLOYEES
@@ -139,7 +151,7 @@ function Dashboard() {
 
       const response =
         await authenticatedFetch(
-          API_URL
+          `${API_URL}/employees`
         );
 
       if (!response) {
@@ -157,7 +169,7 @@ function Dashboard() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            "Failed to fetch employees"
+            "Failed to fetch employees."
         );
       }
 
@@ -200,7 +212,7 @@ function Dashboard() {
   };
 
   // =====================================
-  // FORM INPUT
+  // INPUT
   // =====================================
 
   const handleInputChange = (event) => {
@@ -209,21 +221,17 @@ function Dashboard() {
       value,
     } = event.target;
 
-    setNewEmployee(
-      (previous) => ({
-        ...previous,
-        [name]: value,
-      })
-    );
+    setNewEmployee((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
   };
 
   // =====================================
   // SEARCH
   // =====================================
 
-  const handleSearchChange = (
-    event
-  ) => {
+  const handleSearchChange = (event) => {
     setSearchTerm(
       event.target.value
     );
@@ -235,9 +243,7 @@ function Dashboard() {
   // DEPARTMENT FILTER
   // =====================================
 
-  const handleDepartmentChange = (
-    event
-  ) => {
+  const handleDepartmentChange = (event) => {
     setDepartmentFilter(
       event.target.value
     );
@@ -354,7 +360,7 @@ function Dashboard() {
   };
 
   // =====================================
-  // ADD EMPLOYEE MODAL
+  // ADD MODAL
   // =====================================
 
   const openAddModal = () => {
@@ -366,15 +372,17 @@ function Dashboard() {
     }
 
     setEditingEmployee(null);
-    setNewEmployee(
-      EMPTY_EMPLOYEE
-    );
+
+    setNewEmployee({
+      ...EMPTY_EMPLOYEE,
+    });
+
     setError("");
     setShowModal(true);
   };
 
   // =====================================
-  // EDIT EMPLOYEE MODAL
+  // EDIT MODAL
   // =====================================
 
   const openEditModal = (
@@ -392,15 +400,18 @@ function Dashboard() {
     setNewEmployee({
       name:
         employee.name || "",
+
       email:
         employee.email || "",
+
       department:
         employee.department || "",
+
       position:
         employee.position || "",
+
       status:
-        employee.status ||
-        "Active",
+        employee.status || "Active",
     });
 
     setError("");
@@ -412,17 +423,20 @@ function Dashboard() {
   // =====================================
 
   const closeModal = () => {
-    if (saving) return;
+    if (saving) {
+      return;
+    }
 
     setShowModal(false);
     setEditingEmployee(null);
-    setNewEmployee(
-      EMPTY_EMPLOYEE
-    );
+
+    setNewEmployee({
+      ...EMPTY_EMPLOYEE,
+    });
   };
 
   // =====================================
-  // ADD / UPDATE EMPLOYEE
+  // ADD / UPDATE
   // =====================================
 
   const handleSubmit = async (
@@ -444,12 +458,16 @@ function Dashboard() {
       const employeeData = {
         name:
           newEmployee.name.trim(),
+
         email:
           newEmployee.email.trim(),
+
         department:
           newEmployee.department,
+
         position:
           newEmployee.position.trim(),
+
         status:
           newEmployee.status,
       };
@@ -458,8 +476,8 @@ function Dashboard() {
         editingEmployee !== null;
 
       const url = isEditing
-        ? `${API_URL}/${editingEmployee.id}`
-        : API_URL;
+        ? `${API_URL}/employees/${editingEmployee.id}`
+        : `${API_URL}/employees`;
 
       const response =
         await authenticatedFetch(
@@ -487,8 +505,7 @@ function Dashboard() {
       let data = {};
 
       try {
-        data =
-          await response.json();
+        data = await response.json();
       } catch {
         data = {};
       }
@@ -496,7 +513,7 @@ function Dashboard() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            "Failed to save employee"
+            "Failed to save employee."
         );
       }
 
@@ -527,12 +544,10 @@ function Dashboard() {
   };
 
   // =====================================
-  // DELETE EMPLOYEE
+  // DELETE
   // =====================================
 
-  const handleDelete = async (
-    id
-  ) => {
+  const handleDelete = async (id) => {
     if (!isAdmin) {
       setError(
         "Administrator access required."
@@ -563,7 +578,7 @@ function Dashboard() {
 
       const response =
         await authenticatedFetch(
-          `${API_URL}/${id}`,
+          `${API_URL}/employees/${id}`,
           {
             method: "DELETE",
           }
@@ -576,8 +591,7 @@ function Dashboard() {
       let data = {};
 
       try {
-        data =
-          await response.json();
+        data = await response.json();
       } catch {
         data = {};
       }
@@ -585,7 +599,7 @@ function Dashboard() {
       if (!response.ok) {
         throw new Error(
           data.message ||
-            "Failed to delete employee"
+            "Failed to delete employee."
         );
       }
 
@@ -596,8 +610,7 @@ function Dashboard() {
       );
 
       if (
-        currentEmployees.length ===
-          1 &&
+        currentEmployees.length === 1 &&
         safeCurrentPage > 1
       ) {
         setCurrentPage(
@@ -622,16 +635,10 @@ function Dashboard() {
   // =====================================
 
   const handleLogout = () => {
-    localStorage.removeItem(
-      "token"
-    );
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-    localStorage.removeItem(
-      "user"
-    );
-
-    window.location.href =
-      "/login";
+    window.location.href = "/login";
   };
 
   // =====================================
@@ -644,15 +651,13 @@ function Dashboard() {
   const activeEmployees =
     employees.filter(
       (employee) =>
-        employee.status ===
-        "Active"
+        employee.status === "Active"
     ).length;
 
   const inactiveEmployees =
     employees.filter(
       (employee) =>
-        employee.status ===
-        "Inactive"
+        employee.status === "Inactive"
     ).length;
 
   const departments =
@@ -751,10 +756,6 @@ function Dashboard() {
     loggedInUser?.email ||
     "";
 
-  const userRole =
-    loggedInUser?.role ||
-    "user";
-
   const userInitial =
     userName
       .charAt(0)
@@ -796,6 +797,7 @@ function Dashboard() {
       <aside className="sidebar">
 
         <div className="sidebar-brand">
+
           <div className="brand-mark">
             E
           </div>
@@ -809,6 +811,7 @@ function Dashboard() {
               Management
             </span>
           </div>
+
         </div>
 
         <nav className="sidebar-nav">
@@ -862,9 +865,7 @@ function Dashboard() {
         <button
           type="button"
           className="logout-button"
-          onClick={
-            handleLogout
-          }
+          onClick={handleLogout}
         >
           <span>↪</span>
           Logout
@@ -911,6 +912,7 @@ function Dashboard() {
             </div>
 
             <div>
+
               <strong>
                 {userName}
               </strong>
@@ -920,6 +922,7 @@ function Dashboard() {
                   ? "Administrator"
                   : "View Only"}
               </span>
+
             </div>
 
           </div>
@@ -932,8 +935,7 @@ function Dashboard() {
           <div
             className="card"
             style={{
-              marginBottom:
-                "20px",
+              marginBottom: "20px",
             }}
           >
             <strong>
@@ -956,6 +958,7 @@ function Dashboard() {
         <section className="stats-grid">
 
           <div className="stat-card">
+
             <div className="stat-icon blue">
               👥
             </div>
@@ -973,9 +976,11 @@ function Dashboard() {
                 All employees
               </small>
             </div>
+
           </div>
 
           <div className="stat-card">
+
             <div className="stat-icon green">
               ✓
             </div>
@@ -994,9 +999,11 @@ function Dashboard() {
                 of workforce
               </small>
             </div>
+
           </div>
 
           <div className="stat-card">
+
             <div className="stat-icon red">
               !
             </div>
@@ -1015,9 +1022,11 @@ function Dashboard() {
                 of workforce
               </small>
             </div>
+
           </div>
 
           <div className="stat-card">
+
             <div className="stat-icon purple">
               #
             </div>
@@ -1035,6 +1044,7 @@ function Dashboard() {
                 Active departments
               </small>
             </div>
+
           </div>
 
         </section>
@@ -1048,6 +1058,7 @@ function Dashboard() {
           <div className="card">
 
             <div className="card-header">
+
               <h2>
                 Department Analytics
               </h2>
@@ -1057,10 +1068,10 @@ function Dashboard() {
                 distribution by
                 department
               </p>
+
             </div>
 
-            {departmentCounts.length ===
-            0 ? (
+            {departmentCounts.length === 0 ? (
               <div className="empty-state">
                 No department data
                 available.
@@ -1080,6 +1091,7 @@ function Dashboard() {
                       <div className="analytics-info">
 
                         <div>
+
                           <strong>
                             {
                               department.name
@@ -1090,11 +1102,11 @@ function Dashboard() {
                             {
                               department.count
                             }{" "}
-                            {department.count ===
-                            1
+                            {department.count === 1
                               ? "Employee"
                               : "Employees"}
                           </span>
+
                         </div>
 
                         <strong>
@@ -1264,8 +1276,7 @@ function Dashboard() {
               Loading recent
               employees...
             </div>
-          ) : recentEmployees.length ===
-            0 ? (
+          ) : recentEmployees.length === 0 ? (
             <div className="empty-state">
               No employees
               available.
@@ -1276,7 +1287,9 @@ function Dashboard() {
               <table className="data-table recent-table">
 
                 <thead>
+
                   <tr>
+
                     <th>
                       Employee
                     </th>
@@ -1292,7 +1305,9 @@ function Dashboard() {
                     <th>
                       Status
                     </th>
+
                   </tr>
+
                 </thead>
 
                 <tbody>
@@ -1311,9 +1326,7 @@ function Dashboard() {
 
                             <div className="employee-avatar">
                               {employee.name
-                                ?.charAt(
-                                  0
-                                )
+                                ?.charAt(0)
                                 .toUpperCase()}
                             </div>
 
@@ -1338,11 +1351,13 @@ function Dashboard() {
                         </td>
 
                         <td>
+
                           <span className="department-badge">
                             {
                               employee.department
                             }
                           </span>
+
                         </td>
 
                         <td>
@@ -1408,15 +1423,11 @@ function Dashboard() {
 
             </div>
 
-            {/* ADMIN ONLY */}
-
             {isAdmin && (
               <button
                 type="button"
                 className="primary-button"
-                onClick={
-                  openAddModal
-                }
+                onClick={openAddModal}
               >
                 + Add Employee
               </button>
@@ -1437,9 +1448,7 @@ function Dashboard() {
               <input
                 type="text"
                 placeholder="Search by name, email or position..."
-                value={
-                  searchTerm
-                }
+                value={searchTerm}
                 onChange={
                   handleSearchChange
                 }
@@ -1463,12 +1472,8 @@ function Dashboard() {
               {departmentNames.map(
                 (department) => (
                   <option
-                    key={
-                      department
-                    }
-                    value={
-                      department
-                    }
+                    key={department}
+                    value={department}
                   >
                     {department}
                   </option>
@@ -1485,8 +1490,7 @@ function Dashboard() {
               Showing{" "}
 
               <strong>
-                {filteredEmployees.length ===
-                0
+                {filteredEmployees.length === 0
                   ? 0
                   : startIndex + 1}
               </strong>
@@ -1543,8 +1547,6 @@ function Dashboard() {
                     Status
                   </th>
 
-                  {/* ADMIN ONLY */}
-
                   {isAdmin && (
                     <th>
                       Action
@@ -1563,8 +1565,8 @@ function Dashboard() {
                     <td
                       colSpan={
                         isAdmin
-                          ? "6"
-                          : "5"
+                          ? 6
+                          : 5
                       }
                       className="empty-cell"
                     >
@@ -1573,8 +1575,7 @@ function Dashboard() {
                     </td>
 
                   </tr>
-                ) : currentEmployees.length >
-                  0 ? (
+                ) : currentEmployees.length > 0 ? (
                   currentEmployees.map(
                     (employee) => (
                       <tr
@@ -1589,9 +1590,7 @@ function Dashboard() {
 
                             <div className="table-avatar">
                               {employee.name
-                                ?.charAt(
-                                  0
-                                )
+                                ?.charAt(0)
                                 .toUpperCase()}
                             </div>
 
@@ -1644,8 +1643,6 @@ function Dashboard() {
 
                         </td>
 
-                        {/* ADMIN ONLY */}
-
                         {isAdmin && (
                           <td>
 
@@ -1689,8 +1686,8 @@ function Dashboard() {
                     <td
                       colSpan={
                         isAdmin
-                          ? "6"
-                          : "5"
+                          ? 6
+                          : 5
                       }
                       className="empty-cell"
                     >
@@ -1716,13 +1713,11 @@ function Dashboard() {
                 type="button"
                 onClick={() =>
                   goToPage(
-                    safeCurrentPage -
-                      1
+                    safeCurrentPage - 1
                   )
                 }
                 disabled={
-                  safeCurrentPage ===
-                  1
+                  safeCurrentPage === 1
                 }
               >
                 Previous
@@ -1732,8 +1727,7 @@ function Dashboard() {
 
                 {Array.from(
                   {
-                    length:
-                      totalPages,
+                    length: totalPages,
                   },
                   (_, index) =>
                     index + 1
@@ -1748,9 +1742,7 @@ function Dashboard() {
                         : ""
                     }
                     onClick={() =>
-                      goToPage(
-                        page
-                      )
+                      goToPage(page)
                     }
                   >
                     {page}
@@ -1763,8 +1755,7 @@ function Dashboard() {
                 type="button"
                 onClick={() =>
                   goToPage(
-                    safeCurrentPage +
-                      1
+                    safeCurrentPage + 1
                   )
                 }
                 disabled={
@@ -1809,8 +1800,7 @@ function Dashboard() {
 
           </div>
 
-          {departmentCounts.length ===
-          0 ? (
+          {departmentCounts.length === 0 ? (
             <div className="empty-state">
               No department data
               available.
@@ -1831,9 +1821,7 @@ function Dashboard() {
 
                       <div className="department-avatar">
                         {department.name
-                          .charAt(
-                            0
-                          )
+                          .charAt(0)
                           .toUpperCase()}
                       </div>
 
@@ -1858,8 +1846,7 @@ function Dashboard() {
                     </strong>
 
                     <p>
-                      {department.count ===
-                      1
+                      {department.count === 1
                         ? "Employee"
                         : "Employees"}
                     </p>
@@ -1878,8 +1865,7 @@ function Dashboard() {
                     <small>
                       {
                         department.percentage
-                      }% of
-                      workforce
+                      }% of workforce
                     </small>
 
                   </div>
@@ -1927,6 +1913,7 @@ function Dashboard() {
             <div className="settings-details">
 
               <div>
+
                 <span>
                   Name
                 </span>
@@ -1934,9 +1921,11 @@ function Dashboard() {
                 <strong>
                   {userName}
                 </strong>
+
               </div>
 
               <div>
+
                 <span>
                   Email
                 </span>
@@ -1944,9 +1933,11 @@ function Dashboard() {
                 <strong>
                   {userEmail}
                 </strong>
+
               </div>
 
               <div>
+
                 <span>
                   Role
                 </span>
@@ -1956,6 +1947,7 @@ function Dashboard() {
                     ? "Administrator"
                     : "View Only User"}
                 </strong>
+
               </div>
 
             </div>
@@ -1968,245 +1960,222 @@ function Dashboard() {
 
       {/* ADD / EDIT MODAL */}
 
-      {showModal &&
-        isAdmin && (
-          <div
-            className="modal-overlay"
-            onMouseDown={(
-              event
-            ) => {
-              if (
-                event.target ===
-                  event.currentTarget &&
-                !saving
-              ) {
-                closeModal();
-              }
-            }}
-          >
+      {showModal && isAdmin && (
+        <div
+          className="modal-overlay"
+          onMouseDown={(event) => {
+            if (
+              event.target ===
+                event.currentTarget &&
+              !saving
+            ) {
+              closeModal();
+            }
+          }}
+        >
 
-            <div className="employee-modal">
+          <div className="employee-modal">
 
-              <div className="modal-header">
+            <div className="modal-header">
 
-                <div>
+              <div>
 
-                  <span className="eyebrow">
-                    EMPLOYEE MANAGEMENT
-                  </span>
+                <span className="eyebrow">
+                  EMPLOYEE MANAGEMENT
+                </span>
 
-                  <h2>
-                    {editingEmployee
-                      ? "Edit Employee"
-                      : "Add New Employee"}
-                  </h2>
+                <h2>
+                  {editingEmployee
+                    ? "Edit Employee"
+                    : "Add New Employee"}
+                </h2>
 
-                  <p>
-                    {editingEmployee
-                      ? "Update employee information"
-                      : "Enter employee information below"}
-                  </p>
+                <p>
+                  {editingEmployee
+                    ? "Update employee information"
+                    : "Enter employee information below"}
+                </p>
 
-                </div>
+              </div>
+
+              <button
+                type="button"
+                className="modal-close"
+                onClick={closeModal}
+                disabled={saving}
+              >
+                ×
+              </button>
+
+            </div>
+
+            <form
+              onSubmit={handleSubmit}
+            >
+
+              <div className="form-group">
+
+                <label htmlFor="name">
+                  Full Name
+                </label>
+
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  placeholder="Enter full name"
+                  value={
+                    newEmployee.name
+                  }
+                  onChange={
+                    handleInputChange
+                  }
+                  required
+                />
+
+              </div>
+
+              <div className="form-group">
+
+                <label htmlFor="employee-email">
+                  Email Address
+                </label>
+
+                <input
+                  type="email"
+                  id="employee-email"
+                  name="email"
+                  placeholder="Enter email address"
+                  value={
+                    newEmployee.email
+                  }
+                  onChange={
+                    handleInputChange
+                  }
+                  required
+                />
+
+              </div>
+
+              <div className="form-group">
+
+                <label htmlFor="department">
+                  Department
+                </label>
+
+                <select
+                  id="department"
+                  name="department"
+                  value={
+                    newEmployee.department
+                  }
+                  onChange={
+                    handleInputChange
+                  }
+                  required
+                >
+
+                  <option value="">
+                    Select department
+                  </option>
+
+                  {departmentNames.map(
+                    (department) => (
+                      <option
+                        key={department}
+                        value={department}
+                      >
+                        {department}
+                      </option>
+                    )
+                  )}
+
+                </select>
+
+              </div>
+
+              <div className="form-group">
+
+                <label htmlFor="position">
+                  Position
+                </label>
+
+                <input
+                  type="text"
+                  id="position"
+                  name="position"
+                  placeholder="Enter position"
+                  value={
+                    newEmployee.position
+                  }
+                  onChange={
+                    handleInputChange
+                  }
+                  required
+                />
+
+              </div>
+
+              <div className="form-group">
+
+                <label htmlFor="status">
+                  Status
+                </label>
+
+                <select
+                  id="status"
+                  name="status"
+                  value={
+                    newEmployee.status
+                  }
+                  onChange={
+                    handleInputChange
+                  }
+                >
+
+                  <option value="Active">
+                    Active
+                  </option>
+
+                  <option value="Inactive">
+                    Inactive
+                  </option>
+
+                </select>
+
+              </div>
+
+              <div className="modal-actions">
 
                 <button
                   type="button"
-                  className="modal-close"
-                  onClick={
-                    closeModal
-                  }
-                  disabled={
-                    saving
-                  }
+                  className="cancel-button"
+                  onClick={closeModal}
+                  disabled={saving}
                 >
-                  ×
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  className="save-button"
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Saving..."
+                    : editingEmployee
+                    ? "Update Employee"
+                    : "Add Employee"}
                 </button>
 
               </div>
 
-              <form
-                onSubmit={
-                  handleSubmit
-                }
-              >
-
-                <div className="form-group">
-
-                  <label htmlFor="name">
-                    Full Name
-                  </label>
-
-                  <input
-                    type="text"
-                    id="name"
-                    name="name"
-                    placeholder="Enter full name"
-                    value={
-                      newEmployee.name
-                    }
-                    onChange={
-                      handleInputChange
-                    }
-                    required
-                  />
-
-                </div>
-
-                <div className="form-group">
-
-                  <label htmlFor="employee-email">
-                    Email Address
-                  </label>
-
-                  <input
-                    type="email"
-                    id="employee-email"
-                    name="email"
-                    placeholder="Enter email address"
-                    value={
-                      newEmployee.email
-                    }
-                    onChange={
-                      handleInputChange
-                    }
-                    required
-                  />
-
-                </div>
-
-                <div className="form-group">
-
-                  <label htmlFor="department">
-                    Department
-                  </label>
-
-                  <select
-                    id="department"
-                    name="department"
-                    value={
-                      newEmployee.department
-                    }
-                    onChange={
-                      handleInputChange
-                    }
-                    required
-                  >
-
-                    <option value="">
-                      Select department
-                    </option>
-
-                    {departmentNames.map(
-                      (
-                        department
-                      ) => (
-                        <option
-                          key={
-                            department
-                          }
-                          value={
-                            department
-                          }
-                        >
-                          {
-                            department
-                          }
-                        </option>
-                      )
-                    )}
-
-                  </select>
-
-                </div>
-
-                <div className="form-group">
-
-                  <label htmlFor="position">
-                    Position
-                  </label>
-
-                  <input
-                    type="text"
-                    id="position"
-                    name="position"
-                    placeholder="Enter position"
-                    value={
-                      newEmployee.position
-                    }
-                    onChange={
-                      handleInputChange
-                    }
-                    required
-                  />
-
-                </div>
-
-                <div className="form-group">
-
-                  <label htmlFor="status">
-                    Status
-                  </label>
-
-                  <select
-                    id="status"
-                    name="status"
-                    value={
-                      newEmployee.status
-                    }
-                    onChange={
-                      handleInputChange
-                    }
-                  >
-
-                    <option value="Active">
-                      Active
-                    </option>
-
-                    <option value="Inactive">
-                      Inactive
-                    </option>
-
-                  </select>
-
-                </div>
-
-                <div className="modal-actions">
-
-                  <button
-                    type="button"
-                    className="cancel-button"
-                    onClick={
-                      closeModal
-                    }
-                    disabled={
-                      saving
-                    }
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className="save-button"
-                    disabled={
-                      saving
-                    }
-                  >
-                    {saving
-                      ? "Saving..."
-                      : editingEmployee
-                      ? "Update Employee"
-                      : "Add Employee"}
-                  </button>
-
-                </div>
-
-              </form>
-
-            </div>
+            </form>
 
           </div>
-        )}
+
+        </div>
+      )}
 
     </div>
   );
