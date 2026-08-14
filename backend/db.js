@@ -10,7 +10,7 @@ const db = mysql.createPool({
   database: process.env.DB_NAME,
 
   ssl: {
-    rejectUnauthorized: true,
+    rejectUnauthorized: false,
   },
 
   waitForConnections: true,
