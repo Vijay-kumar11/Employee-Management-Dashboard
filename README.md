@@ -1,16 +1,99 @@
-# React + Vite
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+# Employee Management Dashboard
 
-Currently, two official plugins are available:
+A full-stack web application for managing employee records with role-based access and secure authentication.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Overview
 
-## React Compiler
+The Employee Management Dashboard provides a centralized interface for managing employee information. It combines a React frontend with a Node.js and Express backend connected to a MySQL database.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Features
 
-## Expanding the ESLint configuration
+- User registration and login
+- Authentication using JSON Web Tokens
+- Password hashing with bcrypt
+- Role-based access for administrators and users
+- Employee record management
+- REST API integration
+- MySQL database connectivity
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Tech Stack
+
+**Frontend**
+- React
+- Vite
+- JavaScript
+- CSS
+
+**Backend**
+- Node.js
+- Express.js
+- REST APIs
+- JSON Web Tokens
+- bcrypt
+
+**Database**
+- MySQL
+
+## Project Structure
+
+- `src/` - Frontend application
+- `backend/` - Backend application and API routes
+
+Check the actual folders in your repository and update these paths if necessary.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js and npm
+- MySQL
+
+### Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Vijay-kumar11/Employee-Management-Dashboard.git
+cd Employee-Management-Dashboard
+```
+
+Install the frontend dependencies:
+
+```bash
+npm install
+```
+
+Start the frontend development server:
+
+```bash
+npm run dev
+```
+
+### Backend Setup
+
+Navigate to the backend directory if your project contains a separate backend:
+
+```bash
+cd backend
+npm install
+```
+
+Configure the required environment variables and MySQL database using the instructions and configuration supported by your actual backend. Then start the backend using the appropriate script defined in its `package.json`.
+
+## Security
+
+- Keep database credentials and JWT secrets in environment variables.
+- Do not commit `.env` files or other sensitive credentials.
+- Use environment variables appropriate to your deployment environment.
+
+## Author
+
+**Vijay Kumar**
+
+- GitHub: [Vijay-kumar11](https://github.com/Vijay-kumar11)
+- LinkedIn: [Connect with me](https://linkedin.com/in/vijaykumar-k-875826295)
+
+---
+
+Built as a full-stack development project to practice frontend development, backend APIs, authentication, and database integration.
